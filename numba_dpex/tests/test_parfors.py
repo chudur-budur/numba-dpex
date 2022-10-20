@@ -44,6 +44,7 @@ import cmath
 import unittest
 import dpctl
 from numba_dpex import config
+import dpnp
 
 # NOTE: Each parfors test class is run in separate subprocess, this is to reduce
 # memory pressure in CI settings. The environment variable "SUBPROC_TEST" is
@@ -164,7 +165,7 @@ class TestParforsBase(TestCase):
         self.fast_pflags.nrt = True
         self.fast_pflags.fastmath = cpu.FastMathOptions(True)
 
-        config.FALLBACK_ON_CPU = 1
+        config.FALLBACK_ON_CPU = 0
         self.device = dpctl.select_default_device()
         print("Using device ...")
         self.device.print_device_info()
@@ -193,6 +194,47 @@ class TestParforsBase(TestCase):
         cfunc = self.compile_njit(pyfunc, sig)
 
         return cfunc, cpfunc
+    
+    def inject_dpnp_names(self, pyfunc):
+        pyfunc_code = pyfunc.__code__
+
+        prange_names = list(pyfunc_code.co_names)
+        
+        # patch all instances, cheat by just switching
+        # range for prange
+        assert 'np' in pyfunc_code.co_names
+        prange_names = tuple([x if x != 'np' else 'dpnp'
+                                for x in pyfunc_code.co_names])
+        new_code = bytes(pyfunc_code.co_code)
+        
+        # create new code parts
+        co_args = [pyfunc_code.co_argcount]
+
+        if utils.PYVERSION >= (3, 8):
+            co_args.append(pyfunc_code.co_posonlyargcount)
+        co_args.append(pyfunc_code.co_kwonlyargcount)
+        co_args.extend([pyfunc_code.co_nlocals,
+                        pyfunc_code.co_stacksize,
+                        pyfunc_code.co_flags,
+                        new_code,
+                        pyfunc_code.co_consts,
+                        prange_names,
+                        pyfunc_code.co_varnames,
+                        pyfunc_code.co_filename,
+                        pyfunc_code.co_name,
+                        pyfunc_code.co_firstlineno,
+                        pyfunc_code.co_lnotab,
+                        pyfunc_code.co_freevars,
+                        pyfunc_code.co_cellvars
+                        ])
+
+        # create code object with prange mutation
+        prange_code = pytypes.CodeType(*co_args)
+
+        # get function
+        pfunc = pytypes.FunctionType(prange_code, globals())
+
+        return pfunc
 
     def check_parfors_vs_others(self, pyfunc, cfunc, cpfunc, *args, **kwargs):
         """
@@ -230,6 +272,7 @@ class TestParforsBase(TestCase):
         fastmath_pcres = kwargs.pop('fastmath_pcres', None)
         check_scheduling = kwargs.pop('check_scheduling', True)
         check_args_for_equality = kwargs.pop('check_arg_equality', None)
+        prfunc = kwargs.pop('prfunc', None)
 
         def copy_args(*args):
             if not args:
@@ -255,22 +298,23 @@ class TestParforsBase(TestCase):
         # python result
         py_args = copy_args(*args)
         py_expected = pyfunc(*py_args)
-    
+        
         # njit result
         njit_args = copy_args(*args)
         njit_output = cfunc.entry_point(*njit_args)
-    
+        
         # parfor result
         parfor_args = copy_args(*args)
         parfor_output = cpfunc.entry_point(*parfor_args)
-    
+        
         # numba_dpex_result
         # TODO: what to do when we need to have a data parallel operations?
         numba_dpex_args = copy_args(*args)
         with dpctl.device_context(self.device):
-            fun = njit(pyfunc)
-            numba_dpex_output = fun(*numba_dpex_args)
-    
+            # nfunc = njit(pyfunc) if not prfunc else njit(prfunc)
+            nfunc = njit(self.inject_dpnp_names(pyfunc)) if not prfunc else self.inject_dpnp_names(prfunc)
+            numba_dpex_output = nfunc(*numba_dpex_args)
+            
         if check_args_for_equality is None:
             np.testing.assert_almost_equal(njit_output, py_expected, **kwargs)
             np.testing.assert_almost_equal(parfor_output, py_expected, **kwargs)
@@ -460,7 +504,6 @@ def blackscholes_impl(sptprice, strike, rate, volatility, timev):
     put = call - futureValue + sptprice
     return put
 
-
 def lr_impl(Y, X, w, iterations):
     # logistic regression example
     for i in range(iterations):
@@ -547,7 +590,6 @@ def countParfors(test_func, args, **kws):
                 ret_count += 1
 
     return ret_count
-
 
 def countArrays(test_func, args, **kws):
     test_ir, tp = get_optimized_numba_ir(test_func, args, **kws)
@@ -675,10 +717,7 @@ class TestPipeline(object):
 
 
 @skip_parfors_unsupported
-# tests: 25
-# fail: 2
-# skipped: 7
-# pass: 16
+# tests: 25, fail: 1, skip: 7, pass: 17
 class TestParforBasic(TestParforsBase):
     """Smoke tests for the parfors transforms. These tests check the most basic
     functionality"""
@@ -736,7 +775,6 @@ class TestParforBasic(TestParforsBase):
             return np.ones((10, 10)) + 1.
         self.check(test_impl)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_simple12(self):
         def test_impl():
             return np.ones((10, 10))# + np.complex128(1.)
@@ -777,7 +815,7 @@ class TestParforBasic(TestParforsBase):
             return m1.T + np.linalg.svd(m2)[1]
         self.check(test_impl, *self.simple_args)
 
-    @needs_blas
+    # @needs_blas
     def test_simple19(self):
         def test_impl(v1, v2, m1, m2):
             return np.dot(m1, v2)
@@ -803,7 +841,6 @@ class TestParforBasic(TestParforsBase):
             return np.sum(v1 + v1)
         self.check(test_impl, *self.simple_args)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_simple23(self):
         def test_impl(v1, v2, m1, m2):
             x = 2 * v1
@@ -844,14 +881,10 @@ class TestParforBasic(TestParforsBase):
         
         
 @skip_parfors_unsupported
-# tests: 4
-# fails: 2
-# skip: 1
-# pass: 1
+# tests: 4, fail: 2, skip: 1, pass: 1
 class TestParforNumericalMisc(TestParforsBase):
     """ Miscellaneous 'classical' numerical tests """
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_pi(self):
         def test_impl(n):
             x = 2 * np.random.ranf(n) - 1
@@ -874,7 +907,6 @@ class TestParforNumericalMisc(TestParforsBase):
         self.assertEqual(countParfors(lr_impl, args), 2)
         self.assertEqual(countArrayAllocs(lr_impl, args), 1)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_kmeans(self):
         np.random.seed(0)
         N = 1024
@@ -893,10 +925,7 @@ class TestParforNumericalMisc(TestParforsBase):
         
         
 @skip_parfors_unsupported
-# tests: 21
-# fails: 4
-# skip: 1
-# pass: 16
+# tests: 21, fail: 4, skip: 1, pass: 16
 class TestParforNumPy(TestParforsBase):
     """Tests NumPy functionality under parfors"""
 
@@ -910,7 +939,6 @@ class TestParforNumPy(TestParforsBase):
 
         self.check(test_impl, A, v)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_fuse_argmin_argmax_max_min(self):
         for op in [np.argmin, np.argmax, np.min, np.max]:
             def test_impl(n):
@@ -944,7 +972,6 @@ class TestParforNumPy(TestParforsBase):
             self.check(test_impl2, 2, arg)
             self.check(test_impl3, 2, arg, 2)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_linspace(self):
         # without num
         def test_impl1(start, stop):
@@ -973,7 +1000,6 @@ class TestParforNumPy(TestParforsBase):
         self.check_variants(test_impl, data_gen)
         self.count_parfors_variants(test_impl, data_gen)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_var(self):
         def test_impl(A):
             return A.var()
@@ -992,7 +1018,6 @@ class TestParforNumPy(TestParforsBase):
         self.check_variants(test_impl, data_gen)
         self.count_parfors_variants(test_impl, data_gen)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_std(self):
         def test_impl(A):
             return A.std()
@@ -1040,7 +1065,6 @@ class TestParforNumPy(TestParforsBase):
         np.testing.assert_allclose(parfor_output, py_output, rtol=0.05)
         self.assertEqual(countParfors(test_impl, (types.int64, )), 1)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_dead_randoms(self):
         def test_impl(n):
             A = np.random.standard_normal(size=(n, n))
@@ -1279,8 +1303,8 @@ class TestParforNumPy(TestParforsBase):
             return np.sum(n) + np.prod(n) + np.min(n) + np.max(n) + np.var(n)
         self.check(test_impl, np.array(7), check_scheduling=False)
         
-# tests: 1
-# skip: 1
+        
+# tests: 1, fail: 0, skip: 1, pass: 0
 class TestParforsUnsupported(TestCase):
     """Tests for unsupported use of parfors"""
     @unittest.skipIf(not _32bit, "Only impacts 32 bit hardware")
@@ -1305,10 +1329,7 @@ class TestParforsUnsupported(TestCase):
         
 
 @skip_parfors_unsupported
-# tests: 43
-# fails: 21
-# skip: 2
-# pass: 20
+# tests: 43, fail: 22, skip: 3, pass: 18
 class TestParfors(TestParforsBase):
     """ Tests cpython, reduction and various parfors features"""
 
@@ -1385,7 +1406,6 @@ class TestParfors(TestParforsBase):
         is_positive = np.zeros(N)
         self.check(test_impl, x, is_positive, N)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_reduce(self):
         def test_impl(A):
             init_val = 10
@@ -1440,7 +1460,6 @@ class TestParfors(TestParforsBase):
             pcfunc = self.compile_parallel(test_impl, ())
         self.assertIn(msg, str(e.exception))
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_parfor_array_access1(self):
         # signed index of the prange generated by sum() should be replaced
         # resulting in array A to be eliminated (see issue #2846)
@@ -1452,7 +1471,6 @@ class TestParfors(TestParforsBase):
         self.check(test_impl, n)
         self.assertEqual(countArrays(test_impl, (types.intp,)), 0)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_parfor_array_access2(self):
         # in this test, the prange index has the same name (i) in two loops
         # thus, i has multiple definitions and is harder to replace
@@ -1526,7 +1544,6 @@ class TestParfors(TestParforsBase):
 
         self.assertTrue(build_tuple_found)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_parfor_dtype_type(self):
         # test array type replacement creates proper type
         def test_impl(a):
@@ -1537,7 +1554,6 @@ class TestParfors(TestParforsBase):
         a = np.ones(10)
         self.check(test_impl, a)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_parfor_array_access5(self):
         # one dim is slice in multi-dim access
         def test_impl(n):
@@ -1601,7 +1617,6 @@ class TestParfors(TestParforsBase):
         # as a different name
         self.assertEqual(countArrayAllocs(test_impl, (types.intp,)), 1)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_reduction_var_reuse(self):
         # issue #3139
         def test_impl(n):
@@ -1615,7 +1630,6 @@ class TestParfors(TestParforsBase):
             return acc
         self.check(test_impl, 16)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_two_d_array_reduction_reuse(self):
         def test_impl(n):
             shp = (13, 17)
@@ -1633,7 +1647,6 @@ class TestParfors(TestParforsBase):
 
         self.check(test_impl, 100)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_one_d_array_reduction(self):
         def test_impl(n):
             result = np.zeros(1, np.int_)
@@ -1645,7 +1658,6 @@ class TestParfors(TestParforsBase):
 
         self.check(test_impl, 100)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_two_d_array_reduction(self):
         def test_impl(n):
             shp = (13, 17)
@@ -1660,7 +1672,6 @@ class TestParfors(TestParforsBase):
 
         self.check(test_impl, 100)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_two_d_array_reduction_with_float_sizes(self):
         # result1 is float32 and tmp is float64.
         # Tests reduction with differing dtypes.
@@ -1676,7 +1687,6 @@ class TestParfors(TestParforsBase):
 
         self.check(test_impl, 100)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_two_d_array_reduction_prod(self):
         def test_impl(n):
             shp = (13, 17)
@@ -1690,7 +1700,6 @@ class TestParfors(TestParforsBase):
 
         self.check(test_impl, 100)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_three_d_array_reduction(self):
         def test_impl(n):
             shp = (3, 2, 7)
@@ -1703,7 +1712,6 @@ class TestParfors(TestParforsBase):
 
         self.check(test_impl, 100)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_preparfor_canonicalize_kws(self):
         # test canonicalize_array_math typing for calls with kw args
         def test_impl(A):
@@ -1722,7 +1730,6 @@ class TestParfors(TestParforsBase):
         cpfunc = self.compile_parallel(test_impl, (numba.typeof(A),))
         self.assertEqual(cpfunc.entry_point(A), test_impl(A))
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_no_hoisting_with_member_function_call(self):
         def test_impl(X):
             n = X.shape[0]
@@ -1780,7 +1787,6 @@ class TestParfors(TestParforsBase):
                                     (types.Array(types.float64, 1, 'C'),
                                      types.Array(types.float64, 1, 'C'))), 1)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_tuple1(self):
         def test_impl(a):
             atup = (3, 4)
@@ -1792,7 +1798,6 @@ class TestParfors(TestParforsBase):
         x = np.arange(10)
         self.check(test_impl, x)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_tuple2(self):
         def test_impl(a):
             atup = a.shape
@@ -1804,7 +1809,6 @@ class TestParfors(TestParforsBase):
         x = np.arange(10)
         self.check(test_impl, x)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_tuple3(self):
         def test_impl(a):
             atup = (np.arange(10), 4)
@@ -1816,7 +1820,6 @@ class TestParfors(TestParforsBase):
         x = np.arange(10)
         self.check(test_impl, x)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_namedtuple1(self):
         def test_impl(a):
             antup = TestNamedTuple(part0=3, part1=4)
@@ -1828,7 +1831,6 @@ class TestParfors(TestParforsBase):
         x = np.arange(10)
         self.check(test_impl, x)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_namedtuple2(self):
         TestNamedTuple2 = namedtuple('TestNamedTuple2', ('part0', 'part1'))
         def test_impl(a):
@@ -1855,7 +1857,6 @@ class TestParfors(TestParforsBase):
         x = TestNamedTuple3(y=np.zeros(10))
         self.check(test_impl, x, check_arg_equality=[comparer])
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_inplace_binop(self):
         def test_impl(a, b):
             b += a
@@ -1899,7 +1900,6 @@ class TestParfors(TestParforsBase):
         x = np.array([1, 1])
         self.check(test_impl, x)
 
-    @skip_if_numba_dpex # fails on numba_dpex
     def test_array_tuple_concat(self):
         # issue6399
         def test_impl(a):
@@ -1918,7 +1918,7 @@ class TestParfors(TestParforsBase):
 
 
 @skip_parfors_unsupported
-@skip_if_numba_dpex
+# tests: 2, fail: 2, skip: 0, pass: 0
 class TestParforsLeaks(MemoryLeakMixin, TestParforsBase):
     def check(self, pyfunc, *args, **kwargs):
         cfunc, cpfunc = self.compile_all(pyfunc, *args)
@@ -1945,7 +1945,9 @@ class TestParforsLeaks(MemoryLeakMixin, TestParforsBase):
         arr = np.arange(10).astype(np.float64)
         self.check(test_impl, arr)
 
+
 @skip_parfors_unsupported
+# tests: 28, fail: 13, skip: 4, pass: 11
 class TestParforsSlice(TestParforsBase):
 
     def test_parfor_slice1(self):
@@ -2244,6 +2246,7 @@ class TestParforsSlice(TestParforsBase):
 
 
 @skip_parfors_unsupported
+# tests: 1, fail: 1, skip: 0, pass: 0
 class TestParforsOptions(TestParforsBase):
 
     def test_parfor_options(self):
@@ -2282,6 +2285,7 @@ class TestParforsOptions(TestParforsBase):
 
 
 @skip_parfors_unsupported
+# tests: 6, fail: 4, skip: 0, pass: 2
 class TestParforsBitMask(TestParforsBase):
 
     def test_parfor_bitmask1(self):
@@ -2344,6 +2348,7 @@ class TestParforsBitMask(TestParforsBase):
 
 
 @skip_parfors_unsupported
+# tests: 23, fail: 11, skip: 2, pass: 10
 class TestParforsMisc(TestParforsBase):
     """
     Tests miscellaneous parts of ParallelAccelerator use.
@@ -2784,7 +2789,7 @@ class TestParforsMisc(TestParforsBase):
 
 
 @skip_parfors_unsupported
-@skip_if_numba_dpex
+# tests: 8, fail: 4, skip: 0, pass: 4
 class TestParforsDiagnostics(TestParforsBase):
 
     def check(self, pyfunc, *args, **kwargs):
@@ -2970,7 +2975,7 @@ class TestPrangeBase(TestParforsBase):
         pyfunc_code = pyfunc.__code__
 
         prange_names = list(pyfunc_code.co_names)
-
+        
         if patch_instance is None:
             # patch all instances, cheat by just switching
             # range for prange
@@ -3109,7 +3114,7 @@ class TestPrangeBase(TestParforsBase):
         with warnings.catch_warnings(record=True) as raised_warnings:
             warnings.simplefilter('always')
             cpfunc = self.compile_parallel(pfunc, sig)
-
+            
         # if check_fastmath is True then check fast instructions
         if check_fastmath:
             self.assert_fastmath(pfunc, sig)
@@ -3120,11 +3125,13 @@ class TestPrangeBase(TestParforsBase):
             fastcpfunc = self.compile_parallel_fastmath(pfunc, sig)
             kwargs = dict({'fastmath_pcres': fastcpfunc}, **kwargs)
 
-        self.check_parfors_vs_others(pyfunc, cfunc, cpfunc, *args, **kwargs)
+        #kwargs['prfunc'] = pfunc
+        self.check_parfors_vs_others(pyfunc, cfunc, cpfunc, prfunc=pfunc, *args, **kwargs)
         return raised_warnings
 
 
 @skip_parfors_unsupported
+# tests: 32, fail: 0, skip: 1, pass: 31
 class TestPrangeBasic(TestPrangeBase):
     """ Tests Prange """
 
@@ -3511,6 +3518,7 @@ class TestPrangeBasic(TestPrangeBase):
 
 
 @skip_parfors_unsupported
+# tests: 25, fail: 3, skip: 1, pass: 21
 class TestPrangeSpecific(TestPrangeBase):
     """ Tests specific features/problems found under prange"""
 
@@ -3922,6 +3930,7 @@ class TestPrangeSpecific(TestPrangeBase):
 
 @skip_parfors_unsupported
 @x86_only
+# tests: 3, fail: 0, skip: 0, pass: 3
 class TestParforsVectorizer(TestPrangeBase):
 
     # env mutating test
