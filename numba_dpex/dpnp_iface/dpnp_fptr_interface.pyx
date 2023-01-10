@@ -157,6 +157,8 @@ cdef DPNPFuncName get_DPNPFuncName_from_str(name):
     if name == "dpnp_cholesky":
         return DPNPFuncName.DPNP_FN_CHOLESKY
     if name == "dpnp_copy":
+        print("numba_dpex.dpnp_iface.dpnp_fptr_interface.get_DPNPFuncName_from_str().1")
+        print("name =", name)
         return DPNPFuncName.DPNP_FN_COPY
     if name == "dpnp_cov":
         return DPNPFuncName.DPNP_FN_COV
@@ -269,6 +271,7 @@ from libc.stdio cimport printf
 
 
 cpdef get_dpnp_fn_ptr(name, types):
+    print("numba_dpex.dpnp_iface.dpnp_fptr_interface.get_dpnp_fn_ptr().1")
     cdef DPNPFuncName func_name = get_DPNPFuncName_from_str(name)
     cdef DPNPFuncType first_type = get_DPNPFuncType_from_str(types[0])
     cdef DPNPFuncType second_type = get_DPNPFuncType_from_str(types[1])

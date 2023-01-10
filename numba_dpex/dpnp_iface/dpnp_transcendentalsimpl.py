@@ -90,6 +90,9 @@ def dpnp_sum_impl(a):
     PRINT_DEBUG = dpnp_lowering.DEBUG
 
     def dpnp_impl(a):
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_sum_impl().dpnp_impl().1"
+        )
         out = np.empty(1, dtype=a.dtype)
         common_impl(a, out, dpnp_func, PRINT_DEBUG)
 

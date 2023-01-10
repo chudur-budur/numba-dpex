@@ -15,7 +15,11 @@ ll_void_p = ir.IntType(8).as_pointer()
 def get_dpnp_fptr(fn_name, type_names):
     from . import dpnp_fptr_interface as dpnp_iface
 
+    print("numba_dpex.dpnp_iface.dpnpimpl.get_dpnp_fptr().1")
     f_ptr = dpnp_iface.get_dpnp_fn_ptr(fn_name, type_names)
+    print("numba_dpex.dpnp_iface.dpnpimpl.get_dpnp_fptr().2")
+    print("type(f_ptr) =", type(f_ptr))
+    print("type_names =", type_names)
     return f_ptr
 
 
@@ -34,10 +38,16 @@ def _dummy_liveness_func(a):
 
 def dpnp_func(fn_name, type_names, sig):
     f_ptr = get_dpnp_fptr(fn_name, type_names)
+    print("numba_dpex.dpnp_iface.dpnpimpl.dpnp_func().1")
+    print("fn_name =", fn_name)
+    print("type_names =", type_names)
+    print("f_ptr =", f_ptr, ", type(f_ptr) =", type(f_ptr))
 
     def get_pointer(obj):
+        print("numba_dpex.dpnp_iface.dpnpimpl.dpnp_func().get_pointer().1")
         return f_ptr
 
+    print("sig =", sig)
     return types.ExternalFunctionPointer(sig, get_pointer=get_pointer)
 
 

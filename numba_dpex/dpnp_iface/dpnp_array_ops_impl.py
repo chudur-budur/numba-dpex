@@ -157,15 +157,27 @@ def dpnp_copy_impl(a):
     PRINT_DEBUG = dpnp_lowering.DEBUG
 
     def dpnp_impl(a):
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().1"
+        )
         if a.size == 0:
             raise ValueError("Passed Empty array")
 
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().2"
+        )
         # TODO: Change once compute follows data in implemented.
         sycl_queue = dpctl_functions.get_current_queue()
 
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().3"
+        )
         # Allocate an empty event vector
         empty_event_list = dpctl_functions.create_event_vector()
 
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().4"
+        )
         a_usm = dpctl_functions.malloc_shared(a.size * a.itemsize, sycl_queue)
         event = dpctl_functions.queue_memcpy(
             sycl_queue, a_usm, a.ctypes, a.size * a.itemsize
@@ -173,11 +185,17 @@ def dpnp_copy_impl(a):
         dpctl_functions.event_wait(event)
         dpctl_functions.event_delete(event)
 
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().5"
+        )
         out = np.arange(0, a.size, 1, res_dtype)
         out_usm = dpctl_functions.malloc_shared(
             out.size * out.itemsize, sycl_queue
         )
 
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().6"
+        )
         strides = np.array(1)
 
         result_out = out_usm
@@ -185,14 +203,22 @@ def dpnp_copy_impl(a):
         result_ndim = out.ndim
         result_shape = out.shapeptr
         result_strides = strides.ctypes
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().7"
+        )
 
         input1_in = a_usm
         input1_size = a.size
         input1_ndim = a.ndim
         input1_shape = a.shapeptr
         input1_strides = strides.ctypes
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().8"
+        )
 
-        where = 0
+        where = None
+
+        # print("dpnp_func =", str(dpnp_func))
 
         ret_event = dpnp_func(
             sycl_queue,
@@ -209,19 +235,46 @@ def dpnp_copy_impl(a):
             where,
             empty_event_list,
         )
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().9"
+        )
         dpctl_functions.event_wait(ret_event)
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().10"
+        )
         event = dpctl_functions.queue_memcpy(
             sycl_queue, out.ctypes, out_usm, out.size * out.itemsize
         )
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().11"
+        )
         dpctl_functions.event_wait(event)
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().12"
+        )
         dpctl_functions.event_delete(event)
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().13"
+        )
         dpctl_functions.event_delete(ret_event)
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().14"
+        )
         # TODO: delete the event vector
 
         dpctl_functions.free_with_queue(a_usm, sycl_queue)
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().15"
+        )
         dpctl_functions.free_with_queue(out_usm, sycl_queue)
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().16"
+        )
         # TODO: delete the sycl_queue
         dpnp_ext._dummy_liveness_func([a.size, out.size])
+        print(
+            "numba_dpex.dpnp_iface.dpnp_array_ops_impl.dpnp_copy_impl().dpnp_impl().17"
+        )
 
         if PRINT_DEBUG:
             print("dpnp implementation")
