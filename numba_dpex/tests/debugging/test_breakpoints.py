@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# SPDX-FileCopyrightText: 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -12,7 +12,7 @@ https://www.sourceware.org/gdb/onlinedocs/gdb/Set-Breaks.html
 
 import pytest
 
-from numba_dpex.tests._helper import skip_no_gdb, skip_no_numba055
+from numba_dpex.tests._helper import skip_no_gdb, skip_no_numba056
 
 from .common import breakpoint_by_function, breakpoint_by_mark, setup_breakpoint
 
@@ -28,7 +28,7 @@ simple_sum_condition_breakpoint = breakpoint_by_mark(
 )
 
 common_loop_body_native_function_name = {
-    "numba": "common_loop_body_242",
+    "numba": "common_loop_body",
     "numba-dpex-kernel": "common_loop_body",
 }
 
@@ -43,7 +43,7 @@ breakpoint_api_cases = [
 ]
 
 
-@skip_no_numba055
+@skip_no_numba056
 @pytest.mark.parametrize("breakpoint, api", breakpoint_api_cases)
 def test_breakpoint_with_condition_by_function_argument(app, breakpoint, api):
     """Function breakpoints and argument initializing

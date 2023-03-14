@@ -1,21 +1,20 @@
 name: dev
 channels:
   - defaults
+  - dppy/label/dev
   - numba
   - intel
   - numba/label/dev
-  - dppy/label/dev
   - nodefaults
 dependencies:
   - python=3.9
   - gxx_linux-64
   - dpcpp_linux-64
   - cython
-  - numba 0.55*
-  - dpctl 0.12*
-  - dpnp >=0.10.1
+  - numba 0.56*
+  - dpctl 0.14*
+  - dpnp >=0.10.2
   - spirv-tools
-  # - llvm-spirv 11.*
   - packaging
   - pytest
   - pip
@@ -27,12 +26,12 @@ dependencies:
     - pytest-cov
     - pytest-xdist
     - pexpect
-
     - sphinx
     - autodoc
     - recommonmark
     - sphinx-rtd-theme
     - sphinxcontrib-apidoc
+    - sphinxcontrib-googleanalytics
 variables:
   CHANNELS: -c defaults -c numba -c intel -c numba/label/dev -c dppy/label/dev --override-channels
   CHANNELS_DEV: -c dppy/label/dev -c defaults -c numba -c intel -c numba/label/dev --override-channels

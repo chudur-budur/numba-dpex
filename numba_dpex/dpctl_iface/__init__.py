@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -14,13 +14,11 @@ includes:
 """
 import numba_dpex.dpctl_iface.dpctl_function_types as dpctl_fn_ty
 from numba_dpex.dpctl_iface.dpctl_capi_fn_builder import DpctlCAPIFnBuilder
-from numba_dpex.dpctl_iface.kernel_launch_ops import KernelLaunchOps
-from numba_dpex.dpctl_iface.usm_ndarray_type import USMNdArrayType
+from numba_dpex.dpctl_iface.legacy_kernel_launch_ops import KernelLaunchOps
 
 __all__ = [
     DpctlCAPIFnBuilder,
     KernelLaunchOps,
-    USMNdArrayType,
 ]
 
 get_current_queue = dpctl_fn_ty.dpctl_get_current_queue()

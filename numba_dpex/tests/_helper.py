@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -11,8 +11,7 @@ import dpctl
 import pytest
 from numba.tests.support import captured_stdout
 
-from numba_dpex import config
-from numba_dpex.numba_support import numba_version
+from numba_dpex import config, numba_version
 
 
 def has_opencl_gpu():
@@ -114,8 +113,8 @@ filter_strings_level_zero_gpu = [
     pytest.param("level_zero:gpu:0", marks=skip_no_level_zero_gpu),
 ]
 
-skip_no_numba055 = pytest.mark.skipif(
-    numba_version < (0, 55), reason="Need Numba 0.55 or higher"
+skip_no_numba056 = pytest.mark.skipif(
+    numba_version < (0, 56), reason="Need Numba 0.56 or higher"
 )
 
 skip_no_gdb = pytest.mark.skipif(
