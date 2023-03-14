@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -65,27 +65,3 @@ class Array(Array):
 
     def is_precise(self):
         return self.dtype.is_precise()
-
-
-class ArrayModel(StructModel):
-    def __init__(self, dmm, fe_type):
-        ndim = fe_type.ndim
-        members = [
-            (
-                "meminfo",
-                types.CPointer(fe_type.dtype, addrspace=fe_type.addrspace),
-            ),
-            (
-                "parent",
-                types.CPointer(fe_type.dtype, addrspace=fe_type.addrspace),
-            ),
-            ("nitems", types.intp),
-            ("itemsize", types.intp),
-            (
-                "data",
-                types.CPointer(fe_type.dtype, addrspace=fe_type.addrspace),
-            ),
-            ("shape", types.UniTuple(types.intp, ndim)),
-            ("strides", types.UniTuple(types.intp, ndim)),
-        ]
-        super(ArrayModel, self).__init__(dmm, fe_type, members)

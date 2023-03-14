@@ -1,4 +1,4 @@
-# Copyright 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -6,7 +6,7 @@ import pytest
 from numba import float32, float64, int32, int64, uint32, uint64
 from numba.core import types
 
-import numba_dpex.extended_numba_itanium_mangler as itanium_mangler
+import numba_dpex.core.itanium_mangler as itanium_mangler
 from numba_dpex.utils import address_space
 
 list_of_dtypes = [
