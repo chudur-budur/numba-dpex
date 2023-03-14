@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -16,7 +16,7 @@ from numba_dpex.core.kernel_interface.func import (
     compile_func,
     compile_func_template,
 )
-from numba_dpex.core.pipelines.offload_compiler import OffloadCompiler
+from numba_dpex.core.pipelines.dpjit_compiler import DpjitCompiler
 
 
 def kernel(
@@ -165,7 +165,14 @@ def dpjit(*args, **kws):
         )
         del kws["forceobj"]
     kws.update({"nopython": True})
-    kws.update({"pipeline_class": OffloadCompiler})
+    kws.update({"parallel": True})
+    kws.update({"pipeline_class": DpjitCompiler})
+
+    # FIXME: When trying to use dpex's target context, overloads do not work
+    # properly. We will turn on dpex target once the issue is fixed.
+
+    # kws.update({"_target": "dpex"})
+
     return decorators.jit(*args, **kws)
 
 

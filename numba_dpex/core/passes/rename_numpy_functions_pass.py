@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -214,9 +214,9 @@ class RewriteOverloadedNumPyFunctionsPass(FunctionPass):
         import numba_dpex.dpnp_iface.dpnp_randomimpl
         import numba_dpex.dpnp_iface.dpnp_sort_search_countimpl
         import numba_dpex.dpnp_iface.dpnp_statisticsimpl
+        import numba_dpex.dpnp_iface.dpnp_stubs_impl
         import numba_dpex.dpnp_iface.dpnp_transcendentalsimpl
         import numba_dpex.dpnp_iface.dpnpdecl
-        import numba_dpex.dpnp_iface.dpnpimpl
 
     def run_pass(self, state):
         rewrite_function_name_pass = _RewriteNumPyOverloadedFunctionsImpl(

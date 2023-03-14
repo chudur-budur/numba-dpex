@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2020 - 2022 Intel Corporation
+# SPDX-FileCopyrightText: 2020 - 2023 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -12,7 +12,7 @@ from numba_dpex.core.exceptions import (
     InvalidKernelLaunchArgsError,
     UnknownGlobalRangeError,
 )
-from numba_dpex.core.kernel_interface.utils import Range
+from numba_dpex.core.kernel_interface.indexers import Range
 
 
 @dpex.kernel
