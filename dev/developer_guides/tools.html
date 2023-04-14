@@ -13,7 +13,7 @@
     </script>
     
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Debugging the compilation pipeline &mdash; numba-dpex 0+untagged.1053.g4c18ebd documentation</title>
+  <title>Debugging the compilation pipeline &mdash; numba-dpex 0+untagged.1070.gbbf978e documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -60,6 +60,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../user_guides/getting_started.html"> Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_guides/kernel_programming_guide/index.html"> Direct kernel programming</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_guides/debugging/index.html"> Debugging with GDB</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guides/docker.html"> Docker</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_guides/migrating_from_numba_cuda.html"> numba-dpex for numba.cuda Programmers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Developer Guides</span></p>
@@ -139,7 +140,7 @@
 <p>To read the DWARF of a kernel, a copy of the IGC generated kernel binary is
 needed. Run the Python script in a GDB debugger mode, and set a breakpoint in
 the kernel:</p>
-<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">NUMBA_OPT</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>$<span class="w"> </span>gdb-oneapi<span class="w"> </span>-q<span class="w"> </span>--args<span class="w"> </span>python<span class="w"> </span>simple_sum.py<span class="w"> </span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="nb">break</span>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nb">export</span><span class="w"> </span><span class="nv">NUMBA_OPT</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>$<span class="w"> </span>gdb-oneapi<span class="w"> </span>-q<span class="w"> </span>--args<span class="w"> </span>python<span class="w"> </span>simple_sum.py<span class="w"> </span><span class="o">(</span>gdb<span class="o">)</span><span class="w"> </span><span class="k">break</span>
 <span class="go">simple_sum.py:22 (gdb) run</span>
 </pre></div>
 </div>
