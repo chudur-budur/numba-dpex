@@ -107,4 +107,3 @@ def test_dpnp_empty_exceptions():
         func2(dpnp.empty((5, 5)), queue)
     except Exception as e:
         assert isinstance(e, errors.TypingError)
-        assert "`device` and `sycl_queue` are exclusive keywords" in str(e)

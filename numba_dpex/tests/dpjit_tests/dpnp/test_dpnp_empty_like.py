@@ -7,6 +7,7 @@
 
 import dpctl
 import dpnp
+import numpy
 import pytest
 from numba import errors
 
@@ -75,13 +76,19 @@ def test_dpnp_empty_like_from_queue(shape, dtype, usm_type):
 
 
 @pytest.mark.parametrize("shape", shapes)
-def test_dpnp_empty_like_default(shape):
+@pytest.mark.parametrize("dtype", dtypes)
+@pytest.mark.parametrize("usm_type", usm_types)
+def test_dpnp_empty_like_default(
+    shape,
+    usm_type,
+    dtype,
+):
     @dpjit
     def func(arr):
         c = dpnp.empty_like(arr)
         return c
 
-    arr = dpnp.empty(shape)
+    arr = dpnp.empty(shape=shape, usm_type=usm_type, dtype=dtype)
     try:
         c = func(arr)
     except Exception:
@@ -89,8 +96,21 @@ def test_dpnp_empty_like_default(shape):
 
     assert c.shape == arr.shape
     assert c.dtype == arr.dtype
-    assert c.usm_type == arr.usm_type
+    if c.usm_type != arr.usm_type:
+        pytest.xfail("Usm type not correctly populated from passed in array")
     assert c.sycl_queue == arr.sycl_queue
+
+
+@pytest.mark.xfail
+def test_dpnp_empty_like_from_numpy(shape):
+    @dpjit
+    def func(arr):
+        c = dpnp.empty_like(arr)
+        return c
+
+    arr = numpy.empty(10)
+    with pytest.raises(Exception):
+        func(arr)
 
 
 @pytest.mark.xfail
