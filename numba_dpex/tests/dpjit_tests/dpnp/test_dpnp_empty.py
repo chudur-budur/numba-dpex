@@ -99,11 +99,11 @@ def test_dpnp_empty_exceptions():
     queue = dpctl.SyclQueue()
 
     @dpjit
-    def func2(a, q):
-        c = dpnp.empty_like(a, sycl_queue=q, device="cpu")
+    def func2(q):
+        c = dpnp.empty(10, sycl_queue=q, device="cpu")
         return c
 
     try:
-        func2(dpnp.empty((5, 5)), queue)
+        func2(queue)
     except Exception as e:
         assert isinstance(e, errors.TypingError)
