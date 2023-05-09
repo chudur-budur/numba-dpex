@@ -29,12 +29,12 @@ def test_dpnp_empty_like_from_device(shape, dtype, usm_type):
         c = dpnp.empty_like(a, dtype=dtype, usm_type=usm_type, device=device)
         return c
 
-    NZ = dpnp.empty(shape)
+    NZ = dpnp.random.random(shape)
 
     try:
         c = func(NZ)
     except Exception:
-        pytest.fail("Calling dpnp.empty_like inside dpjit failed")
+        pytest.fail("Calling dpnp.empty_like inside dpjit failed.")
 
     if len(c.shape) == 1:
         assert c.shape[0] == NZ.shape[0]
@@ -62,7 +62,7 @@ def test_dpnp_empty_like_from_queue(shape, dtype, usm_type):
     try:
         c = func(NZ, queue)
     except Exception:
-        pytest.fail("Calling dpnp.empty_like inside dpjit failed")
+        pytest.fail("Calling dpnp.empty_like inside dpjit failed.")
 
     if len(c.shape) == 1:
         assert c.shape[0] == NZ.shape[0]
@@ -92,7 +92,7 @@ def test_dpnp_empty_like_default(
     try:
         c = func(arr)
     except Exception:
-        pytest.fail("Calling dpnp.empty_like inside dpjit failed")
+        pytest.fail("Calling dpnp.empty_like inside dpjit failed.")
 
     assert c.shape == arr.shape
     assert c.dtype == arr.dtype
