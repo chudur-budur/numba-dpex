@@ -13,7 +13,7 @@
     </script>
     
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>numba_dpex.core.runtime.context module &mdash; numba-dpex 0+untagged.1070.gbbf978e documentation</title>
+  <title>numba_dpex.core.runtime.context module &mdash; numba-dpex 0+untagged.1174.gbc46319 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -124,7 +124,8 @@ from a given filter string.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="numba_dpex.core.runtime.context.DpexRTContext.meminfo_alloc">
 <span class="sig-name descname"><span class="pre">meminfo_alloc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usm_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#numba_dpex.core.runtime.context.DpexRTContext.meminfo_alloc" title="Permalink to this definition"></a></dt>
-<dd><p>A wrapped caller for meminfo_alloc_unchecked() with null check.</p>
+<dd><p>Wrapper to call <code class="xref py py-func docutils literal notranslate"><span class="pre">meminfo_alloc_unchecked()</span></code>
+with null checking of the returned value.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -150,13 +151,14 @@ DPC++ filter selector string.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="numba_dpex.core.runtime.context.DpexRTContext.meminfo_fill">
-<span class="sig-name descname"><span class="pre">meminfo_fill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meminfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itemsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#numba_dpex.core.runtime.context.DpexRTContext.meminfo_fill" title="Permalink to this definition"></a></dt>
-<dd><p>A wrapped caller for meminfo_fill_unchecked() with null check.</p>
+<span class="sig-name descname"><span class="pre">meminfo_fill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meminfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itemsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_is_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_is_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#numba_dpex.core.runtime.context.DpexRTContext.meminfo_fill" title="Permalink to this definition"></a></dt>
+<dd><p>Wrapper to call <code class="xref py py-func docutils literal notranslate"><span class="pre">meminfo_fill_unchecked()</span></code>
+with null checking of the returned value.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="numba_dpex.core.runtime.context.DpexRTContext.meminfo_fill_unchecked">
-<span class="sig-name descname"><span class="pre">meminfo_fill_unchecked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meminfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itemsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#numba_dpex.core.runtime.context.DpexRTContext.meminfo_fill_unchecked" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">meminfo_fill_unchecked</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meminfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">itemsize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dest_is_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value_is_float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#numba_dpex.core.runtime.context.DpexRTContext.meminfo_fill_unchecked" title="Permalink to this definition"></a></dt>
 <dd><p>Fills an allocated <cite>MemInfo</cite> with the value specified.</p>
 <p>The result of the call is checked and if it is <cite>NULL</cite>, i.e. the fill
 operation failed, then a <cite>MemoryError</cite> is raised. If the fill operation
@@ -192,18 +194,19 @@ usm allocator.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="numba_dpex.core.runtime.context.DpexRTContext.submit_ndrange">
+<span class="sig-name descname"><span class="pre">submit_ndrange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argtys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lrange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depevents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndepevents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#numba_dpex.core.runtime.context.DpexRTContext.submit_ndrange" title="Permalink to this definition"></a></dt>
+<dd><p>Calls DPEXRTQueue_CreateFromFilterString to create a new sycl::queue
+from a given filter string.</p>
+<p>Returns: A LLVM IR call inst.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="numba_dpex.core.runtime.context.DpexRTContext.submit_range">
 <span class="sig-name descname"><span class="pre">submit_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">argtys</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">range</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nrange</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depevents</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndepevents</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#numba_dpex.core.runtime.context.DpexRTContext.submit_range" title="Permalink to this definition"></a></dt>
 <dd><p>Calls DPEXRTQueue_CreateFromFilterString to create a new sycl::queue
 from a given filter string.</p>
-<dl class="simple">
-<dt>Args:</dt><dd><dl class="simple">
-<dt>device (llvmlite.ir.values.FormattedConstant): An LLVM ArrayType</dt><dd><p>storing a const string for a DPC++ filter selector string.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p>Returns: A DPCTLSyclQueueRef pointer.</p>
+<p>Returns: A LLVM IR call inst.</p>
 </dd></dl>
 
 <dl class="py method">
