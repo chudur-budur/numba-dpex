@@ -794,6 +794,7 @@ static npy_intp product_of_shape(npy_intp *shape, npy_intp ndim)
 static int DPEXRT_sycl_usm_ndarray_from_python(PyObject *obj,
                                                usmarystruct_t *arystruct)
 {
+    printf("==========> DPEXRT_sycl_usm_ndarray_from_python()\n");
     struct PyUSMArrayObject *arrayobj = NULL;
     int i = 0, j = 0, k = 0, ndim = 0, exp = 0;
     npy_intp *shape = NULL, *strides = NULL;
@@ -862,9 +863,12 @@ static int DPEXRT_sycl_usm_ndarray_from_python(PyObject *obj,
     // itemsize is a power of two
     while (itemsize >>= 1)
         exp++;
+    printf("==========> exp = %d\n", exp);
 
-    for (i = 0; i < ndim; ++i, ++p)
+    for (i = 0; i < ndim; ++i, ++p) {
         *p = shape[i];
+        printf("==========> *p = %ld <-- shape[%d] = %ld\n", *p, i, shape[i]);
+    }
 
     // DPCTL returns a NULL pointer if the array is contiguous. dpctl stores
     // strides as number of elements and Numba stores strides as bytes, for
@@ -876,6 +880,8 @@ static int DPEXRT_sycl_usm_ndarray_from_python(PyObject *obj,
     if (strides) {
         for (i = 0; i < ndim; ++i, ++p) {
             *p = strides[i] << exp;
+            printf("==========> *p = %ld <-- strides[%d] = %ld\n", *p, i,
+                   strides[i]);
         }
     }
     else {
@@ -886,6 +892,13 @@ static int DPEXRT_sycl_usm_ndarray_from_python(PyObject *obj,
             *p <<= exp;
         }
     }
+
+    // arystruct->shape_and_strides[2] = 96;
+    // arystruct->shape_and_strides[3] = 16;
+
+    for (i = 0; i < 2 * ndim; ++i)
+        printf("==========> arystruct->shape_and_strides[%d] = %ld\n", i,
+               arystruct->shape_and_strides[i]);
 
     DPEXRT_DEBUG(
         drt_debug_print("DPEXRT-DEBUG: Done with unboxing call to "
