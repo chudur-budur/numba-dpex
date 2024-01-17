@@ -231,6 +231,9 @@ def unbox_dpnp_nd_array(typ, obj, c):
     #      potential memory corruption
     #
     # --------------- End of Numba comment from @ubox(types.Array)
+    print(
+        "numba_dpex.core.types.dpnp_ndarray_type.unbox_dpnp_nd_array(): unboxing ..."
+    )
     nativearycls = c.context.make_array(typ)
     nativeary = nativearycls(c.context, c.builder)
     aryptr = nativeary._getpointer()
@@ -288,6 +291,7 @@ def box_array(typ, val, c):
         the Numba-dpex native value.
     """
     if c.context.enable_nrt:
+        print("numba_dpex.core.types.dpnp_ndarray_type.box_array(): boxing ...")
         np_dtype = numpy_support.as_dtype(typ.dtype)
         dtypeptr = c.env_manager.read_const(c.env_manager.add_const(np_dtype))
         dpexrtCtx = dpexrt.DpexRTContext(c.context)
