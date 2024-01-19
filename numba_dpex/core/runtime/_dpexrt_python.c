@@ -803,6 +803,7 @@ static int DPEXRT_sycl_usm_ndarray_from_python(PyObject *obj,
     DPCTLSyclQueueRef qref = NULL;
     PyGILState_STATE gstate;
     npy_intp itemsize = 0;
+    Py_ssize_t *strides_;
 
     // Increment the ref count on obj to prevent CPython from garbage
     // collecting the array.
@@ -878,11 +879,14 @@ static int DPEXRT_sycl_usm_ndarray_from_python(PyObject *obj,
     // FIXME: Stride computation should check order and adjust how strides are
     // calculated. Right now strides are assuming that order is C contigous.
     if (strides) {
+        // strides_ = (Py_ssize_t *)malloc(sizeof(Py_ssize_t) * ndim);
         for (i = 0; i < ndim; ++i, ++p) {
             *p = strides[i] << exp;
+            // strides_[i] = *p;
             printf("==========> *p = %ld <-- strides[%d] = %ld\n", *p, i,
                    strides[i]);
         }
+        // arrayobj->strides_ = strides_;
     }
     else {
         for (i = ndim * 2 - 1; i >= ndim; --i, ++p) {
