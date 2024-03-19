@@ -1,4 +1,6 @@
 
+:orphan:
+
 numba_dpex.kernel_api.index_space_ids
 =====================================
 
@@ -23,9 +25,9 @@ Overview
    * - :py:obj:`Group <numba_dpex.kernel_api.index_space_ids.Group>`
      - Analogue to the ``sycl::group`` type.
    * - :py:obj:`Item <numba_dpex.kernel_api.index_space_ids.Item>`
-     - Analogue to the ``sycl::item`` type. Identifies an instance of the
+     - Analogue to the ``sycl::item`` class.
    * - :py:obj:`NdItem <numba_dpex.kernel_api.index_space_ids.NdItem>`
-     - Analogue to the ``sycl::nd_item`` type. Identifies an instance of the
+     - Analogue to the ``sycl::nd_item`` class.
 
 
 
@@ -104,8 +106,10 @@ Classes
 
 .. py:class:: Item(extent: numba_dpex.kernel_api.ranges.Range, index: list)
 
-   Analogue to the ``sycl::item`` type. Identifies an instance of the
-   function object executing at each point in an Range.
+   Analogue to the ``sycl::item`` class.
+
+   Identifies an instance of the function object executing at each point in an
+   :class:`.Range`.
 
 
    .. rubric:: Overview
@@ -120,6 +124,8 @@ Classes
         - Get the linear id associated with this item for all dimensions.
       * - :py:obj:`get_id <numba_dpex.kernel_api.index_space_ids.Item.get_id>`\ (idx)
         - Get the id for a specific dimension.
+      * - :py:obj:`get_linear_range <numba_dpex.kernel_api.index_space_ids.Item.get_linear_range>`\ ()
+        - Return the total number of work-items in the work-group.
       * - :py:obj:`get_range <numba_dpex.kernel_api.index_space_ids.Item.get_range>`\ (idx)
         - Get the range size for a specific dimension.
 
@@ -143,6 +149,11 @@ Classes
       :rtype: int
 
 
+   .. py:method:: get_linear_range()
+
+      Return the total number of work-items in the work-group.
+
+
    .. py:method:: get_range(idx)
 
       Get the range size for a specific dimension.
@@ -155,8 +166,10 @@ Classes
 
 .. py:class:: NdItem(global_item: Item, local_item: Item, group: Group)
 
-   Analogue to the ``sycl::nd_item`` type. Identifies an instance of the
-   function object executing at each point in an NdRange.
+   Analogue to the ``sycl::nd_item`` class.
+
+   Identifies an instance of the function object executing at each point in an
+   :class:`.NdRange`.
 
 
    .. rubric:: Overview
@@ -170,7 +183,7 @@ Classes
       * - :py:obj:`get_global_id <numba_dpex.kernel_api.index_space_ids.NdItem.get_global_id>`\ (idx)
         - Get the global id for a specific dimension.
       * - :py:obj:`get_global_linear_id <numba_dpex.kernel_api.index_space_ids.NdItem.get_global_linear_id>`\ ()
-        - Get the global linear id associated with this item for all
+        - Get the linearized global id for the item for all dimensions.
       * - :py:obj:`get_local_id <numba_dpex.kernel_api.index_space_ids.NdItem.get_local_id>`\ (idx)
         - Get the local id for a specific dimension.
       * - :py:obj:`get_local_linear_id <numba_dpex.kernel_api.index_space_ids.NdItem.get_local_linear_id>`\ ()
@@ -179,6 +192,10 @@ Classes
         - Get the global range size for a specific dimension.
       * - :py:obj:`get_local_range <numba_dpex.kernel_api.index_space_ids.NdItem.get_local_range>`\ (idx)
         - Get the local range size for a specific dimension.
+      * - :py:obj:`get_local_linear_range <numba_dpex.kernel_api.index_space_ids.NdItem.get_local_linear_range>`\ ()
+        - Return the total number of work-items in the work-group.
+      * - :py:obj:`get_global_linear_range <numba_dpex.kernel_api.index_space_ids.NdItem.get_global_linear_range>`\ ()
+        - Return the total number of work-items in the work-group.
       * - :py:obj:`get_group <numba_dpex.kernel_api.index_space_ids.NdItem.get_group>`\ ()
         - Returns the group.
 
@@ -195,8 +212,7 @@ Classes
 
    .. py:method:: get_global_linear_id()
 
-      Get the global linear id associated with this item for all
-      dimensions.
+      Get the linearized global id for the item for all dimensions.
 
       :returns: The global linear id.
       :rtype: int
@@ -233,6 +249,16 @@ Classes
 
       :returns: The size
       :rtype: int
+
+
+   .. py:method:: get_local_linear_range()
+
+      Return the total number of work-items in the work-group.
+
+
+   .. py:method:: get_global_linear_range()
+
+      Return the total number of work-items in the work-group.
 
 
    .. py:method:: get_group()
